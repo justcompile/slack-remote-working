@@ -15,7 +15,7 @@ app.post('/set-location', function(req, res) {
   var username = '@'+req.body.user_name;
   var message = req.body.text;
 
-  if (!message || !message.test(/(office|remote)/i)) {
+  if (!message || !/(office|remote)/i.test(message)) {
     res.send({text: 'You must specify either `office` or `remote` as your location. It makes my life easier :)'});
   }
 
@@ -48,24 +48,24 @@ app.get('/locate', function (req, res) {
       } else {
         remoteUsers.push({name: username, updated: user.updated});
       }
-
-      messageLines.push('*Those in the office:*');
-      if (officeUsers.length) {
-        officeUsers.forEach(function(user) {
-          messageLines.push('- ' + user.user + ' as of ' + user.updated);
-        });
-      } else {
-        messageLines.push('- None');
-      }
-
-      if (remoteUsers.length) {
-        remoteUsers.forEach(function(user) {
-          messageLines.push('- ' + user.user + ' as of ' + user.updated);
-        });
-      } else {
-        messageLines.push('- None');
-      }
     });
+
+    messageLines.push('*Those in the office:*');
+    if (officeUsers.length) {
+      officeUsers.forEach(function(user) {
+        messageLines.push('- ' + user.user + ' as of ' + user.updated);
+      });
+    } else {
+      messageLines.push('- None');
+    }
+
+    if (remoteUsers.length) {
+      remoteUsers.forEach(function(user) {
+        messageLines.push('- ' + user.user + ' as of ' + user.updated);
+      });
+    } else {
+      messageLines.push('- None');
+    }
 
     responseObject.text = messageLines.join('\n');
   } else {
