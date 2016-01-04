@@ -1,7 +1,10 @@
-var express = require('express'),
-    bodyParser = require('body-parser');
+var http = require('http'),
+    express = require('express'),
+    bodyParser = require('body-parser'),
+    MongoService = require('./libs/mongoService');
 
 var app = express();
+    mongoService = new MongoService(process.env.MONGOLAB_URI || 'mongodb://localhost:27017/storystream-slack');
 
 app.set('port', (process.env.PORT || 5000));
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
@@ -19,12 +22,13 @@ app.post('/set-location', function(req, res) {
     res.send({text: 'You must specify either `office` or `remote` as your location. It makes my life easier :)'});
   }
 
-  cache[username] = {
-    location: message.toLowerCase(),
-    updated: new Date()
-  };
-
-  res.send('Thanks. Have a great day!');
+  mongoService.updateUserLocation(username, message.toLowerCase(), function(err, result) {
+    if (err) {
+      res.send('Unable to set location');
+    } else {
+      res.send('Thanks. Have a great day!');
+    }
+  });
 });
 
 app.get('/locate', function (req, res) {
@@ -41,50 +45,89 @@ app.get('/locate', function (req, res) {
 
     var messageLines = [];
 
-    Object.keys(cache).forEach(function(username) {
-      var user = cache[username];
-      if (user.location === 'office') {
-        officeUsers.push({name: username, updated: user.updated});
-      } else {
-        remoteUsers.push({name: username, updated: user.updated});
+    mongoService.getAllUsers(function(err, docs) {
+      if (err) {
+        res.status(500).send(err);
+        return;
       }
+
+      docs.forEach(function(user) {
+        if (user.location === 'office') {
+          officeUsers.push({name: user.username, updated: user.updated});
+        } else {
+          remoteUsers.push({name: user.username, updated: user.updated});
+        }
+      });
+
+      messageLines.push('*Those in the office:*');
+      if (officeUsers.length) {
+        officeUsers.forEach(function(user) {
+          messageLines.push('- ' + user.name + ' as of ' + user.updated);
+        });
+      } else {
+        messageLines.push('- None\n');
+      }
+
+      messageLines.push('*Those working remotely:*');
+
+      if (remoteUsers.length) {
+        remoteUsers.forEach(function(user) {
+          messageLines.push('- ' + user.name + ' as of ' + user.updated);
+        });
+      } else {
+        messageLines.push('- None');
+      }
+
+      responseObject.text = messageLines.join('\n');
+
+      res.send(responseObject);
     });
-
-    messageLines.push('*Those in the office:*');
-    if (officeUsers.length) {
-      officeUsers.forEach(function(user) {
-        messageLines.push('- ' + user.name + ' as of ' + user.updated);
-      });
-    } else {
-      messageLines.push('- None\n');
-    }
-
-    messageLines.push('*Those working remotely:*');
-
-    if (remoteUsers.length) {
-      remoteUsers.forEach(function(user) {
-        messageLines.push('- ' + user.name + ' as of ' + user.updated);
-      });
-    } else {
-      messageLines.push('- None');
-    }
-
-    responseObject.text = messageLines.join('\n');
   } else {
-    var user = cache[entityToFind];
-    if (!user) {
-      responseObject.text = 'Could not find any location information for ' + entityToFind;
-    } else {
-      responseObject.text = '`'+username + '`\'s location: ' + user.location + ' as of ' + user.updated;
-    }
-  }
+    mongoService.getUser(entityToFind, function(err, user) {
+      if (!user) {
+        responseObject.text = 'Could not find any location information for ' + entityToFind;
+      } else {
+        responseObject.text = '`'+user.username + '`\'s location: ' + user.location + ' as of ' + user.updated;
+      }
 
-  res.send(responseObject);
+      res.send(responseObject);
+    });
+  }
 });
 
-var server = app.listen(app.get('port'), function () {
-  var host = server.address().address;
-  var port = server.address().port;
+var server = http.createServer(app);
 
-  console.log('Example app listening at http://%s:%s', host, port);
+mongoService.init(function() {
+  server.listen(app.get('port'), function () {
+    var host = server.address().address;
+    var port = server.address().port;
+
+    console.log('App listening on port', app.get('port'));
+  });
+})
+
+// Tidy up connections on close or exit
+
+process.on('exit', function () {
+    console.log('Exiting ...');
+    if (null != mongoService) {
+        mongoService.close(true, function(){
+          console.log('bye');
+        });
+    }
+    // close other resources here
+    console.log('bye');
+});
+
+// happens when you press Ctrl+C
+process.on('SIGINT', function () {
+    console.log( '\nGracefully shutting down from  SIGINT (Crtl-C)' );
+    process.exit();
+});
+
+// usually called with kill
+process.on('SIGTERM', function () {
+    console.log('Parent SIGTERM detected (kill)');
+    // exit cleanly
+    process.exit(0);
 });
