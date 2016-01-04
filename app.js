@@ -1,7 +1,13 @@
-var express = require('express');
+var express = require('express'),
+    bodyParser = require('body-parser');
+
 var app = express();
 
 app.set('port', (process.env.PORT || 5000));
+app.use( bodyParser.json() );       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+  extended: true
+})); 
 
 var cache = {};
 
