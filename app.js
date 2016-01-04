@@ -53,15 +53,17 @@ app.get('/locate', function (req, res) {
     messageLines.push('*Those in the office:*');
     if (officeUsers.length) {
       officeUsers.forEach(function(user) {
-        messageLines.push('- ' + user.user + ' as of ' + user.updated);
+        messageLines.push('- ' + user.name + ' as of ' + user.updated);
       });
     } else {
-      messageLines.push('- None');
+      messageLines.push('- None\n');
     }
+
+    messageLines.push('*Those working remotely:*');
 
     if (remoteUsers.length) {
       remoteUsers.forEach(function(user) {
-        messageLines.push('- ' + user.user + ' as of ' + user.updated);
+        messageLines.push('- ' + user.name + ' as of ' + user.updated);
       });
     } else {
       messageLines.push('- None');
