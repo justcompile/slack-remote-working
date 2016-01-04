@@ -3,6 +3,13 @@ var app = express();
 
 app.set('port', (process.env.PORT || 5000));
 
+var cache = {};
+
+app.post('/set-location', function(req, res) {
+  console.log(req.body);
+  res.send('Thanks. Have a great day!');
+});
+
 app.get('/locate', function (req, res) {
   var entityToFind = req.query.text;
 
