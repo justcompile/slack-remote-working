@@ -3,7 +3,8 @@ var app = express();
 
 app.set('port', (process.env.PORT || 5000));
 
-app.get('/', function (req, res) {
+app.get('/locate', function (req, res) {
+  console.log(req.body);
   res.send('Hello World!');
 });
 
