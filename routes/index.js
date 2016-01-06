@@ -31,9 +31,9 @@ router.get('/locate', function (req, res) {
 
       docs.forEach(function(user) {
         if (user.location === 'office') {
-          officeUsers.push({name: user.username, updated: user.updated});
+          officeUsers.push({name: user.username, updated: user.updated, status: user.status});
         } else {
-          remoteUsers.push({name: user.username, updated: user.updated});
+          remoteUsers.push({name: user.username, updated: user.updated, status: user.status});
         }
       });
 
@@ -41,7 +41,7 @@ router.get('/locate', function (req, res) {
       if (officeUsers.length) {
         officeUsers.forEach(function(user) {
           var status = user.status || 'unset';
-          messageLines.push('- ' + user.name + ' as of ' + formatDate(user.updated) + ' - ('+ status +')');
+          messageLines.push('- ' + user.name + ' ('+ status +') as of ' + formatDate(user.updated));
         });
       } else {
         messageLines.push('- None\n');
@@ -52,7 +52,7 @@ router.get('/locate', function (req, res) {
       if (remoteUsers.length) {
         remoteUsers.forEach(function(user) {
           var status = user.status || 'unset';
-          messageLines.push('- ' + user.name + ' as of ' + formatDate(user.updated) + ' - ('+ status +')');
+          messageLines.push('- ' + user.name + ' ('+ status +') as of ' + formatDate(user.updated));
         });
       } else {
         messageLines.push('- None');
