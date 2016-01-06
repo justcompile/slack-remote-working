@@ -42,10 +42,10 @@ MongoService.prototype.getAllUsers = function(callback) {
 };
 
 
-MongoService.prototype.updateUserLocation = function (username, location, callback) {
+MongoService.prototype.updateUserLocation = function (username, location, status, updated, callback) {
   var col = this.db.collection('user-locs');
 
-  col.updateOne({username: username}, {$set: {location: location, updated: new Date()}}, {
+  col.updateOne({username: username}, {$set: {location: location, status: status, updated: updated}}, {
       upsert: true
     }, function(err, r) {
       if (err) {
@@ -67,5 +67,27 @@ MongoService.prototype.log = function() {
   }
 };
 
+var mongoService;
 
-module.exports = MongoService;
+module.exports = function(connectionString) {
+  if (!mongoService) {
+    mongoService = new MongoService(connectionString);
+  }
+
+  return {
+    init: function(callback) {
+      if (!mongoService.db) {
+        mongoService.init(callback);
+      } else {
+        callback();
+      }
+    },
+    close: function(force, callback) {
+      mongoService.close(force, callback);
+    },
+    mongoService: mongoService
+  }
+}
+
+
+MongoService;
