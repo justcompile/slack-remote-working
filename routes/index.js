@@ -19,7 +19,7 @@ router.get('/locate', function (req, res) {
   };
 
   if (!entityToFind || entityToFind.toLowerCase() === 'everyone') {
-    var officeUsers = [], remoteUsers = [];
+    var officeUsers = [], remoteUsers = [], satOfficeUsers = [];
 
     var messageLines = [];
 
@@ -32,6 +32,8 @@ router.get('/locate', function (req, res) {
       docs.forEach(function(user) {
         if (user.location === 'office') {
           officeUsers.push({name: user.username, updated: user.updated, status: user.status});
+        } else if (user.location === 'satellite office') {
+          satOfficeUsers.push({name: user.username, updated: user.updated, status: user.status});
         } else {
           remoteUsers.push({name: user.username, updated: user.updated, status: user.status});
         }
@@ -40,6 +42,16 @@ router.get('/locate', function (req, res) {
       messageLines.push('*Those in the office:*');
       if (officeUsers.length) {
         officeUsers.forEach(function(user) {
+          var status = user.status || 'unset';
+          messageLines.push('- ' + user.name + ' ('+ status +') as of ' + formatDate(user.updated));
+        });
+      } else {
+        messageLines.push('- None\n');
+      }
+
+      messageLines.push('*Those in the satellite office:*');
+      if (satOfficeUsers.length) {
+        satOfficeUsers.forEach(function(user) {
           var status = user.status || 'unset';
           messageLines.push('- ' + user.name + ' ('+ status +') as of ' + formatDate(user.updated));
         });

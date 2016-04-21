@@ -50,7 +50,12 @@ module.exports = function(data) {
       return;
     }
 
-    var location = userRecord.ip === config.officeIp ? 'office' : 'remote';
+    var location = 'remote';
+    if (userRecord.ip === config.officeIp) {
+      location = 'office';
+    } else if (userRecord.ip === config.satOfficeIp) {
+      location = 'satellite office';
+    }
 
     mongoService.updateUserLocation('@' + userRecord.username, location, data.presence, new Date(userRecord.date_last*1000), function(err, resp) {
       if (err) {
