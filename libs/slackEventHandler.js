@@ -40,15 +40,18 @@ module.exports = function(data) {
   if (!data || data.user === config.botId) return;
 
   accessLog.findUser(data.user, function(err, userRecord) {
+
     if (err) {
       console.error(err);
       return;
     }
 
     // if connected via phone, we're not interested
-    if (!/^SlackWeb/i.test(userRecord.user_agent)) {
-      return;
-    }
+    // console.log(userRecord.user_agent);
+    // if (/(ios|android)/i.test(userRecord.user_agent)) {
+    //   console.log('connected via phone, we\'re not interested');
+    //   return;
+    // }
 
     var location = 'remote';
     if (userRecord.ip === config.officeIp) {
