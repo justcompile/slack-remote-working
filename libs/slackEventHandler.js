@@ -17,7 +17,7 @@ SlackAccessLog.prototype.findUser = function (userId, callback) {
     var userRecord;
 
     response.logins.some(function(record) {
-      if (record.user_id === userId) {
+      if (record.user_id === userId && !/record.user_agent/i.test(record.user_agent)) {
         userRecord = record;
         return true;
       }
@@ -46,12 +46,11 @@ module.exports = function(data) {
       return;
     }
 
-    // if connected via phone, we're not interested
-    // console.log(userRecord.user_agent);
-    // if (/(ios|android)/i.test(userRecord.user_agent)) {
-    //   console.log('connected via phone, we\'re not interested');
-    //   return;
-    // }
+    // if connected via phone or apiapp tester, we're not interested
+    if (/(ios|android|apiapp)/i.test(userRecord.user_agent)) {
+      console.log('connected via phone, we\'re not interested');
+      return;
+    }
     console.log('User: ', userRecord)
 
     var location = 'remote';
