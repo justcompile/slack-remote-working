@@ -52,7 +52,7 @@ module.exports = function(data) {
     //   console.log('connected via phone, we\'re not interested');
     //   return;
     // }
-    console.log('User at: ', userRecord.ip)
+    console.log('User: ', userRecord)
 
     var location = 'remote';
     if (userRecord.ip === config.officeIp) {
